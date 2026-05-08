@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}GraphGuesser — Results{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-12">
+    {% if rd and rd.status == "revealed" %}
+    <div class="card mb-4" style="border-color:rgba(249,168,37,.4)">
+      <div class="card-body text-center py-3">
+        <div class="section-label">The Answer Was</div>
+        <code class="fs-4" style="color:var(--gg-gold)">f(x) = {{ rd.function }}</code>
+        <span class="text-muted ms-3 small">on [{{ rd.interval[0] }}, {{ rd.interval[1] }}]</span>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-trophy-fill me-2" style="color:var(--gg-gold)"></i>Final Leaderboard</span>
+        {% if game.status != "finished" %}
+          <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-secondary">
+            Back to Game
+          </a>
+        {% endif %}
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-dark table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="ps-3">#</th>
+              <th>Team</th>
+              <th>Expression</th>
+              <th class="text-end">Accuracy</th>
+              <th class="text-end">Penalty</th>
+              <th class="text-end pe-3">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in ranked %}
+            <tr>
+              <td class="ps-3">
+                {% if loop.index == 1 %}<span class="medal-1">🥇</span>
+                {% elif loop.index == 2 %}<span class="medal-2">🥈</span>
+                {% elif loop.index == 3 %}<span class="medal-3">🥉</span>
+                {% else %}{{ loop.index }}{% endif %}
+              </td>
+              <td class="fw-bold">{{ r.team }}</td>
+              <td>
+                {% if r.expression %}
+                  <code>{{ r.expression }}</code>
+                  {% if r.rmse is not none %}
+                    <span class="text-muted small ms-2">(RMSE {{ "%.4f"|format(r.rmse) }})</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted">No submission</span>
+                {% endif %}
+              </td>
+              <td class="text-end">{{ r.accuracy }}</td>
+              <td class="text-end text-danger">−{{ r.penalty }}</td>
+              <td class="text-end pe-3 fw-bold" style="color:var(--gg-gold)">{{ r.score }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

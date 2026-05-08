@@ -4,3 +4,5 @@ matplotlib>=3.7
 click>=8.1
 rich>=13.0
 customtkinter>=5.2
+flask>=3.0
+gunicorn>=21.0

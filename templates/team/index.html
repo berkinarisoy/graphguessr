@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}GraphGuesser — Submit{% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="15"/>
+{% endblock %}
+{% block content %}
+
+{% if game.status == "finished" %}
+  <div class="alert alert-info text-center">
+    Game over! <a href="{{ url_for('results') }}" class="alert-link">See final results →</a>
+  </div>
+{% endif %}
+
+{% if rd %}
+<div class="row g-4">
+
+  <!-- LEFT: sample points + hints -->
+  <div class="col-lg-7">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Round {{ rd.number + 1 }}
+          {% if rd.status == "revealed" %}
+            <span class="badge bg-warning text-dark ms-2">Revealed</span>
+          {% else %}
+            <span class="badge bg-success ms-2">Active</span>
+          {% endif %}
+        </span>
+        <span class="text-muted small">
+          Interval: [{{ rd.interval[0] }}, {{ rd.interval[1] }}] &nbsp;|&nbsp;
+          Hints: {{ rd.hints_revealed }}/{{ rd.hints|length }}
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">Sample Points</div>
+        <table class="table table-sm table-dark sp-table mb-4">
+          <thead><tr><th>x</th><th>f(x)</th></tr></thead>
+          <tbody>
+            {% for x, y in rd.sample_points %}
+            <tr><td>{{ "%.6f"|format(x) }}</td><td>{{ "%.6f"|format(y) }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        {% if rd.hints_revealed > 0 %}
+        <div class="section-label">Hints Revealed ({{ rd.hints_revealed }})</div>
+        {% for h in rd.hints[:rd.hints_revealed] %}
+          <div class="hint-badge">
+            <i class="bi bi-lightbulb-fill me-1"></i>
+            <strong>Hint {{ loop.index }}</strong> — {{ h.text }}
+          </div>
+        {% endfor %}
+        <p class="text-muted small mt-2">
+          Each hint costs −{{ rd.hint_cost }} points from your final score.
+        </p>
+        {% else %}
+          <p class="text-muted small">No hints revealed yet.</p>
+        {% endif %}
+
+        {% if rd.status == "revealed" %}
+          <div class="mt-3 p-3 rounded" style="background:rgba(249,168,37,.1); border:1px solid rgba(249,168,37,.3)">
+            <div class="section-label">The Answer</div>
+            <code class="fs-5">f(x) = {{ rd.function }}</code>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if rd.status == "revealed" %}
+      <a href="{{ url_for('results') }}" class="btn btn-gold w-100">
+        <i class="bi bi-trophy-fill me-1"></i> View Scores & Results
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: submission form -->
+  <div class="col-lg-5">
+    {% if rd.status != "revealed" %}
+    <div class="card">
+      <div class="card-header">Submit Your Guess</div>
+      <div class="card-body">
+        <p class="text-muted small mb-3">
+          Enter your function below. You can resubmit — only your <strong>last</strong>
+          submission counts. Submissions are hidden until the host reveals.
+        </p>
+        <form method="POST" action="{{ url_for('team_submit') }}">
+          <div class="mb-3">
+            <label class="form-label section-label">Team</label>
+            <select name="team" class="form-select" required>
+              <option value="" disabled selected>Select your team…</option>
+              {% for t in game.teams %}
+                <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label section-label">f(x) =</label>
+            <input type="text" name="expression" class="form-control font-monospace"
+                   placeholder="e.g. 2*x**3 - 3*x + 1" required
+                   autocomplete="off" autocorrect="off" autocapitalize="off"/>
+            <div class="form-text text-muted">
+              Use: <code>x**2</code>, <code>sin(x)</code>, <code>exp(x)</code>,
+              <code>log(x)</code>, <code>sqrt(x)</code>, <code>pi</code>, <code>E</code>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-accent w-100">
+            <i class="bi bi-send-fill me-1"></i> Submit Guess
+          </button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div class="card-header">Round Over</div>
+      <div class="card-body text-center py-4">
+        <i class="bi bi-flag-fill fs-1" style="color:var(--gg-gold)"></i>
+        <p class="mt-3">Submissions are closed for this round.</p>
+        <a href="{{ url_for('results') }}" class="btn btn-gold mt-2">View Results</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="card mt-4">
+      <div class="card-header">Scoring Formula</div>
+      <div class="card-body text-muted small">
+        <p><strong>Accuracy</strong> = round(1000 × e<sup>−2·RMSE/σ</sup>)</p>
+        <p><strong>Penalty</strong> = hints_seen × {{ rd.hint_cost }} pts</p>
+        <p><strong>Score</strong> = max(0, Accuracy − Penalty)</p>
+        <p class="mb-0">RMSE measures how close your curve is to the true function.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+  <p>Waiting for the host to start a round…</p>
+</div>
+{% endif %}
+{% endblock %}

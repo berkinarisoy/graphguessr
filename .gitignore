@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+dist/
+build/
+.DS_Store
+web_game.json
+game_session.json
+sample_points.png
+reveal.png
+.venv/
+venv/

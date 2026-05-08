@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}GraphGuesser — Game Setup{% endblock %}
+{% block head %}
+<style>
+  .round-card { background: var(--gg-panel); border: 1px solid var(--gg-sep);
+                border-radius: 10px; padding: 1.2rem; margin-bottom: 1rem; position: relative; }
+  .round-num  { color: var(--gg-accent); font-weight: 700; font-size: .9rem; }
+  .remove-btn { position: absolute; top: .75rem; right: .75rem; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="fw-bold mb-0" style="color:var(--gg-accent)">New Game Setup</h3>
+    <p class="text-muted small mb-0">Enter all rounds upfront — functions are hidden from teams until you reveal each one.</p>
+  </div>
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+</div>
+
+<form method="POST" id="setupForm">
+
+  <!-- Teams -->
+  <div class="card mb-4">
+    <div class="card-header">Teams</div>
+    <div class="card-body">
+      <label class="form-label section-label">Team Names (comma-separated)</label>
+      <input type="text" name="teams" class="form-control" required
+             placeholder="Alpha, Beta, Gamma, Delta" value="Alpha, Beta, Gamma"/>
+      <div class="form-text text-muted">Each team will pick their name from a dropdown when submitting.</div>
+    </div>
+  </div>
+
+  <!-- Rounds -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="section-label mb-0">Rounds (all entered upfront, hidden from teams)</div>
+    <button type="button" class="btn btn-sm btn-outline-primary" id="addRound">
+      <i class="bi bi-plus-circle me-1"></i> Add Round
+    </button>
+  </div>
+
+  <div id="roundsContainer">
+    <!-- Rounds injected by JS -->
+  </div>
+
+  <button type="submit" class="btn btn-gold w-100 mt-3" style="height:50px; font-size:1.1rem">
+    <i class="bi bi-play-fill me-1"></i> Start Game
+  </button>
+</form>
+
+{% endblock %}
+{% block scripts %}
+<script>
+let roundCount = 0;
+
+function addRound() {
+  const idx = roundCount++;
+  const div = document.createElement('div');
+  div.className = 'round-card';
+  div.id = `round_${idx}`;
+  div.innerHTML = `
+    <div class="round-num mb-3">Round ${idx + 1}</div>
+    <button type="button" class="btn btn-sm btn-outline-danger remove-btn"
+            onclick="removeRound(${idx})" title="Remove round">✕</button>
+    <div class="row g-3">
+      <div class="col-12">
+        <label class="form-label section-label">Mystery Function f(x)</label>
+        <input type="text" name="round_func_${idx}" class="form-control font-monospace"
+               placeholder="e.g. 2*x**3 - 3*x + 1  or  sin(2*x) + x/2"
+               required autocomplete="off"/>
+        <div class="form-text text-muted">
+          Syntax: <code>x**2</code>, <code>sin(x)</code>, <code>exp(x)</code>,
+          <code>log(x)</code>, <code>sqrt(x)</code>, <code>pi</code>, <code>E</code>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label section-label">Interval a</label>
+        <input type="number" name="round_a_${idx}" class="form-control" value="-2" step="any" required/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label section-label">Interval b</label>
+        <input type="number" name="round_b_${idx}" class="form-control" value="2" step="any" required/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label section-label">Sample Points</label>
+        <input type="number" name="round_n_${idx}" class="form-control" value="6" min="2" max="20"/>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label section-label">Hint Penalty (pts)</label>
+        <input type="number" name="round_hcost_${idx}" class="form-control" value="50" min="0"/>
+      </div>
+      <div class="col-12">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="round_random_${idx}" value="1" id="rr_${idx}"/>
+          <label class="form-check-label text-muted small" for="rr_${idx}">Random sample point spacing</label>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('roundsContainer').appendChild(div);
+}
+
+function removeRound(idx) {
+  const el = document.getElementById(`round_${idx}`);
+  if (el) el.remove();
+}
+
+document.getElementById('addRound').addEventListener('click', addRound);
+
+// Start with 3 rounds by default
+addRound(); addRound(); addRound();
+</script>
+{% endblock %}
